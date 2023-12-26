@@ -1,0 +1,32 @@
+#banner {
+    max-width: 400px;
+    margin: auto;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5) !important;
+    border-radius: 20px;
+}
+
+.run {
+    background-color: #624AFF !important;
+    color: #FFFFFF !important;
+    border-radius: 2px !important;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.5) !important;
+}
+.run:active {
+    background-color: #d96565 !important; 
+}
+.run:hover {
+    background-color: #a079f5 !important; 
+}
+/* tab button style */
+button.svelte-kqij2n {
+    margin-bottom: -1px;
+    border: 1px solid transparent;
+    border-color: transparent;
+    border-bottom: none;
+    color: #9CA3AF !important;
+    font-size: 16px;
+}
+button.selected.svelte-kqij2n {
+    background: #ddd8f9 !important;
+    color: rgb(62, 7, 240) !important;
+}

@@ -1,0 +1,43 @@
+name: anytext
+channels:
+  - pytorch
+  - defaults
+dependencies:
+  - python=3.10.6
+  - pip=23.0.1
+  - pytorch=2.1.0
+  - torchvision=0.16.0
+  - cudatoolkit=11.8
+  - numpy=1.23.3
+  - cython==0.29.33
+  - fsspec==2023.12.1
+  - pip:
+      - Pillow==9.5.0
+      - gradio==3.50.0
+      - albumentations==0.4.3
+      - opencv-python==4.7.0.72
+      - imageio==2.9.0
+      - imageio-ffmpeg==0.4.2
+      - pytorch-lightning==1.5.0
+      - omegaconf==2.2.3
+      - test-tube==0.7.5
+      - streamlit==1.20.0
+      - einops==0.4.1
+      - transformers==4.34.1
+      - webdataset==0.2.5
+      - kornia==0.6.7
+      - open_clip_torch==2.7.0
+      - torchmetrics==0.11.4
+      - timm==0.6.7
+      - addict==2.4.0
+      - yapf==0.32.0
+      - safetensors==0.4.0
+      - basicsr==1.4.2
+      - jieba==0.42.1
+      - modelscope==1.10.0
+      - tensorflow==2.13.0
+      - easydict==1.10
+      - xformers==0.0.20
+      - subword-nmt==0.3.8
+      - sacremoses==0.0.53
+      - sentencepiece==0.1.99
