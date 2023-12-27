@@ -10,7 +10,6 @@ dependencies:
   - cudatoolkit=11.8
   - numpy=1.23.3
   - cython==0.29.33
-  - fsspec==2023.12.1
   - pip:
       - Pillow==9.5.0
       - gradio==3.50.0
@@ -41,3 +40,4 @@ dependencies:
       - subword-nmt==0.3.8
       - sacremoses==0.0.53
       - sentencepiece==0.1.99
+      - fsspec
