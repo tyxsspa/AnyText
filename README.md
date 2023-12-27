@@ -15,7 +15,7 @@ conda install -c anaconda git
 # Clone anytext code
 git clone https://github.com/tyxsspa/AnyText.git
 cd AnyText
-# Prepare a font file; Arial Unicode MS is recommended, you need to download it on your own
+# Prepare a font file; Arial Unicode MS is recommended, **you need to download it on your own**
 mv your/path/to/arialuni.ttf ./font/Arial_Unicode.ttf
 # Create a new environment and install packages as follows:
 conda env create -f environment.yaml
@@ -32,7 +32,7 @@ If you have advanced GPU (with at least 20G memory), it is recommended to deploy
 python demo.py
 ```
 ![demo](docs/demo.jpg "demo")
-Please note that when executing inference for the first time, the model files will be downloaded to: `~/.cache/modelscope/hub`. If you need to modify the download directory, you can manually specify the environment variable: `MODELSCOPE_CACHE`.
+**Please note** that when executing inference for the first time, the model files will be downloaded to: `~/.cache/modelscope/hub`. If you need to modify the download directory, you can manually specify the environment variable: `MODELSCOPE_CACHE`.
 
 ## 📈Evaluation
 We use Sentence Accuracy (Sen. ACC) and Normalized Edit Distance (NED) to evaluate the accuracy of generated text, and use the FID metric to assess the quality of generated images. Compared to existing methods, AnyText has a significant advantage in both Chinese and English text generation.
