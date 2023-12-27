@@ -5,11 +5,45 @@
 ![sample](docs/sample.jpg "sample")
 
 ## 📌News
+[2023.12.27] - 🧨We released the latest checkpoint(v1.1) and inference code, check on [modelscope](https://modelscope.cn/models/damo/cv_anytext_text_generation_editing/summary) in Chinese.
 [2023.12.05] - The paper is available at [here](https://arxiv.org/abs/2311.03054).
 
-## ⏰Coming soon
-Thank you all for your interest in AnyText! 
-We are in the last process of making necessary preparations before open-sourcing. With minor adjustments to our method and dataset, we are optimizing our model to reduce the probability of generating watermark or fake text in the background. Simultaneously, we are also developing a user-friendly demo that will allow everyone to easily generate the desired images. As promised initially, all the codes, models, and datasets of AnyText will be open-sourced. Please bear with us a little longer, and thank you for your patience!
+## 🛠Installation
+```bash
+# Install git (skip if already done)
+conda install -c anaconda git
+# Clone anytext code
+git clone https://github.com/tyxsspa/AnyText.git
+cd AnyText
+# Prepare a font file; Arial Unicode MS is recommended, you need to download it on your own
+mv your/path/to/arialuni.ttf ./font/Arial_Unicode.ttf
+# Create a new environment and install packages as follows:
+conda env create -f environment.yaml
+conda activate anytext
+```
+
+## 🔮Inference
+AnyText include two modes: Text Generation and Text Editing. Running the simple code below to perform inference in both modes and verify whether the environment is correctly installed.
+```bash
+python inference.py
+```
+If you have advanced GPU (with at least 20G memory), it is recommended to deploy our demo as below, which includes usage instruction, user interface and abundant examples.
+```bash
+python demo.py
+```
+![demo](docs/demo.jpg "demo")
+Please note that when executing inference for the first time, the model files will be downloaded to: `~/.cache/modelscope/hub`. If you need to modify the download directory, you can manually specify the environment variable: `MODELSCOPE_CACHE`.
+
+## 📈Evaluation
+We use Sentence Accuracy (Sen. ACC) and Normalized Edit Distance (NED) to evaluate the accuracy of generated text, and use the FID metric to assess the quality of generated images. Compared to existing methods, AnyText has a significant advantage in both Chinese and English text generation.
+![eval](docs/eval.jpg "eval")
+
+## ⏰TODOs
+- [x] Release the model and inference code
+- [ ] Provide publicly accessible demo link
+- [ ] Release tools for merging weights from community models or LoRAs
+- [ ] Release AnyText-benchmark dataset and evaluation code
+- [ ] Release AnyWord-3M dataset and training code
 
 ## Citation
 ```
