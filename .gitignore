@@ -145,4 +145,4 @@ dmypy.json
 /tmp_dir/
 /tmp_files/
 /SaveImages/
-*.png
+./*.png
