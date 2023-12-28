@@ -5,8 +5,8 @@
 ![sample](docs/sample.jpg "sample")
 
 ## 📌News
-[2023.12.28] - Online demo is available [here](https://modelscope.cn/studios/damo/studio_anytext/summary)!
-[2023.12.27] - 🧨We released the latest checkpoint(v1.1) and inference code, check on [modelscope](https://modelscope.cn/models/damo/cv_anytext_text_generation_editing/summary) in Chinese.
+[2023.12.28] - Online demo is available [here](https://modelscope.cn/studios/damo/studio_anytext/summary)! 
+[2023.12.27] - 🧨We released the latest checkpoint(v1.1) and inference code, check on [modelscope](https://modelscope.cn/models/damo/cv_anytext_text_generation_editing/summary) in Chinese. 
 [2023.12.05] - The paper is available at [here](https://arxiv.org/abs/2311.03054).
 
 ## 💡Methodology
