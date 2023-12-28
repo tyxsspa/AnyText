@@ -5,9 +5,9 @@
 ![sample](docs/sample.jpg "sample")
 
 ## 📌News
-[2023.12.28] - Online demo is available [here](https://modelscope.cn/studios/damo/studio_anytext/summary)! 
-[2023.12.27] - 🧨We released the latest checkpoint(v1.1) and inference code, check on [modelscope](https://modelscope.cn/models/damo/cv_anytext_text_generation_editing/summary) in Chinese. 
-[2023.12.05] - The paper is available at [here](https://arxiv.org/abs/2311.03054).
+[2023.12.28] - Online demo is available [here](https://modelscope.cn/studios/damo/studio_anytext/summary)!  
+[2023.12.27] - 🧨We released the latest checkpoint(v1.1) and inference code, check on [modelscope](https://modelscope.cn/models/damo/cv_anytext_text_generation_editing/summary) in Chinese.  
+[2023.12.05] - The paper is available at [here](https://arxiv.org/abs/2311.03054).  
 
 ## 💡Methodology
 AnyText comprises a diffusion pipeline with two primary elements: an auxiliary latent module and a text embedding module. The former uses inputs like text glyph, position, and masked image to generate latent features for text generation or editing. The latter employs an OCR model for encoding stroke data as embeddings, which blend with image caption embeddings from the tokenizer to generate texts that seamlessly integrate with the background. We employed text-control diffusion loss and text perceptual loss for training to further enhance writing accuracy.
