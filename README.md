@@ -42,6 +42,10 @@ python demo.py
 ![demo](docs/demo.jpg "demo")
 **Please note** that when executing inference for the first time, the model files will be downloaded to: `~/.cache/modelscope/hub`. If you need to modify the download directory, you can manually specify the environment variable: `MODELSCOPE_CACHE`.
 
+## 🌄Gallery
+![gallery](docs/gallery.png "gallery")
+
+
 ## 📈Evaluation
 We use Sentence Accuracy (Sen. ACC) and Normalized Edit Distance (NED) to evaluate the accuracy of generated text, and use the FID metric to assess the quality of generated images. Compared to existing methods, AnyText has a significant advantage in both Chinese and English text generation.
 ![eval](docs/eval.jpg "eval")
