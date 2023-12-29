@@ -12,6 +12,7 @@ import numpy as np
 import re
 from gradio.components import Component
 from util import check_channels, resize_image, save_images
+import json
 
 BBOX_MAX_NUM = 8
 img_save_folder = 'SaveImages'
@@ -28,51 +29,6 @@ def count_lines(prompt):
     if len(strs) == 0:
         strs = [' ']
     return len(strs)
-
-
-class ScriptLoader:
-    path_map = {
-        "js": os.path.abspath(os.path.join(os.path.dirname(__file__), "javascript")),
-        "py": os.path.abspath(os.path.join(os.path.dirname(__file__), "python"))
-    }
-
-    def __init__(self, script_type):
-        self.script_type = script_type
-        self.path = ScriptLoader.path_map[script_type]
-        self.loaded_scripts = []
-
-    @staticmethod
-    def get_scripts(path: str, file_type: str) -> list[tuple[str, str]]:
-        scripts = []
-        dir_list = [os.path.join(path, f) for f in os.listdir(path)]
-        files_list = [f for f in dir_list if os.path.isfile(f)]
-        for s in files_list:
-            if os.path.splitext(s)[1] == f".{file_type}":
-                scripts.append((s, os.path.basename(s)))
-        return scripts
-
-
-class JavaScriptLoader(ScriptLoader):
-    def __init__(self):
-        super().__init__("js")
-        self.original_template = gr.routes.templates.TemplateResponse
-        self.load_js()
-        gr.routes.templates.TemplateResponse = self.template_response
-
-    def load_js(self):
-        js_scripts = ScriptLoader.get_scripts(self.path,
-                                              self.script_type)
-        for file_path, file_name in js_scripts:
-            with open(file_path, 'r', encoding="utf-8") as file:
-                self.loaded_scripts.append(f"\n<!--{file_name}-->\n<script>\n{file.read()}\n</script>")
-
-    def template_response(self, *args, **kwargs):
-        response = self.original_template(*args, **kwargs)
-        response.body = response.body.replace(
-            '</head>'.encode('utf-8'), f"{''.join(self.loaded_scripts)}\n</head>".encode("utf-8")
-        )
-        response.init_headers()
-        return response
 
 
 def generate_rectangles(w, h, n, max_trys=200):
@@ -246,13 +202,25 @@ def resize_h(h, img1, img2):
 
 
 is_t2i = 'true'
-js_loader = JavaScriptLoader()
 block = gr.Blocks(css='style.css', theme=gr.themes.Soft()).queue()
+
+with open('javascript/bboxHint.js', 'r') as file:
+    value = file.read()
+escaped_value = json.dumps(value)
+
 with block:
+    block.load(fn=None,
+               _js=f"""() => {{
+               const script = document.createElement("script");
+               const text =  document.createTextNode({escaped_value});
+               script.appendChild(text);
+               document.head.appendChild(script);
+               }}""")
     gr.HTML('<div style="text-align: center; margin: 20px auto;"> \
             <img id="banner" src="file/example_images/banner.png" alt="anytext"> <br>  \
             [<a href="https://arxiv.org/abs/2311.03054" style="color:blue; font-size:18px;">arXiv</a>] \
-            [<a href="https://github.com/tyxsspa/AnyText" style="color:blue; font-size:18px;">Code</a>]\
+            [<a href="https://github.com/tyxsspa/AnyText" style="color:blue; font-size:18px;">Code</a>] \
+            [<a href="https://modelscope.cn/models/damo/cv_anytext_text_generation_editing/summary" style="color:blue; font-size:18px;">ModelScope</a>]\
             version: 1.1.0 </div>')
     with gr.Row(variant='compact'):
         with gr.Column():
@@ -327,12 +295,12 @@ with block:
                             y = gr.Slider(label='y', value=0.4, minimum=0.0, maximum=1.0, step=0.0001, elem_id=f'MD-t2i-{i}-y',  visible=False)
                             w = gr.Slider(label='w', value=0.2, minimum=0.0, maximum=1.0, step=0.0001, elem_id=f'MD-t2i-{i}-w',  visible=False)
                             h = gr.Slider(label='h', value=0.2, minimum=0.0, maximum=1.0, step=0.0001, elem_id=f'MD-t2i-{i}-h',  visible=False)
-                            x.change(fn=None, inputs=x, outputs=x, _js=f'v => onBoxChange({is_t2i}, {i}, "x", v)', show_progress=False)
-                            y.change(fn=None, inputs=y, outputs=y, _js=f'v => onBoxChange({is_t2i}, {i}, "y", v)', show_progress=False)
-                            w.change(fn=None, inputs=w, outputs=w, _js=f'v => onBoxChange({is_t2i}, {i}, "w", v)', show_progress=False)
-                            h.change(fn=None, inputs=h, outputs=h, _js=f'v => onBoxChange({is_t2i}, {i}, "h", v)', show_progress=False)
+                            x.change(fn=None, inputs=x, outputs=x, _js=f'v => onBoxChange({is_t2i}, {i}, "x", v)', show_progress=False, queue=False)
+                            y.change(fn=None, inputs=y, outputs=y, _js=f'v => onBoxChange({is_t2i}, {i}, "y", v)', show_progress=False, queue=False)
+                            w.change(fn=None, inputs=w, outputs=w, _js=f'v => onBoxChange({is_t2i}, {i}, "w", v)', show_progress=False, queue=False)
+                            h.change(fn=None, inputs=h, outputs=h, _js=f'v => onBoxChange({is_t2i}, {i}, "h", v)', show_progress=False, queue=False)
 
-                            e.change(fn=None, inputs=e, outputs=e, _js=f'e => onBoxEnableClick({is_t2i}, {i}, e)')
+                            e.change(fn=None, inputs=e, outputs=e, _js=f'e => onBoxEnableClick({is_t2i}, {i}, e)', queue=False)
                             rect_cb_list.extend([e])
                             rect_xywh_list.extend([x, y, w, h])
 
@@ -351,7 +319,7 @@ with block:
                                  gr.Image(visible=selected_option == 'Manual-draw(手绘)'),
                                  gr.Radio(visible=selected_option != 'Auto-rand(随机)'),
                                  gr.Checkbox(value=selected_option == 'Auto-rand(随机)')]
-                    pos_radio.change(change_options, pos_radio, rect_cb_list + [rect_img, draw_img, sort_radio, revise_pos], show_progress=False)
+                    pos_radio.change(change_options, pos_radio, rect_cb_list + [rect_img, draw_img, sort_radio, revise_pos], show_progress=False, queue=False)
                     with gr.Row():
                         gr.Markdown("")
                         run_gen = gr.Button(value="Run(运行)!", scale=0.3, elem_classes='run')
