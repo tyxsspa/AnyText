@@ -132,6 +132,7 @@ class TextRecognizer(object):
         self.chars = self.get_char_dict(args.rec_char_dict_path)
         self.char2id = {x: i for i, x in enumerate(self.chars)}
         self.is_onnx = not isinstance(self.predictor, torch.nn.Module)
+        self.use_fp16 = args.use_fp16
 
     # img: CHW
     def resize_norm_img(self, img, max_wh_ratio):
@@ -188,6 +189,8 @@ class TextRecognizer(object):
                 # max_wh_ratio = max(max_wh_ratio, wh_ratio)  # comment to not use different ratio
             for ino in range(beg_img_no, end_img_no):
                 norm_img = self.resize_norm_img(img_list[indices[ino]], max_wh_ratio)
+                if self.use_fp16:
+                    norm_img = norm_img.half()
                 norm_img = norm_img.unsqueeze(0)
                 norm_img_batch.append(norm_img)
             norm_img_batch = torch.cat(norm_img_batch, dim=0)

@@ -32,6 +32,8 @@ class ControlledUnetModel(UNetModel):
         hs = []
         with torch.no_grad():
             t_emb = timestep_embedding(timesteps, self.model_channels, repeat_only=False)
+            if self.use_fp16:
+                t_emb = t_emb.half()
             emb = self.time_embed(t_emb)
             h = x.type(self.dtype)
             for module in self.input_blocks:
@@ -124,12 +126,12 @@ class ControlNet(nn.Module):
                   f"This option has LESS priority than attention_resolutions {attention_resolutions}, "
                   f"i.e., in cases where num_attention_blocks[i] > 0 but 2**i not in attention_resolutions, "
                   f"attention will still not be set.")
-
         self.attention_resolutions = attention_resolutions
         self.dropout = dropout
         self.channel_mult = channel_mult
         self.conv_resample = conv_resample
         self.use_checkpoint = use_checkpoint
+        self.use_fp16 = use_fp16
         self.dtype = th.float16 if use_fp16 else th.float32
         self.num_heads = num_heads
         self.num_head_channels = num_head_channels
@@ -313,6 +315,8 @@ class ControlNet(nn.Module):
 
     def forward(self, x, hint, text_info, timesteps, context, **kwargs):
         t_emb = timestep_embedding(timesteps, self.model_channels, repeat_only=False)
+        if self.use_fp16:
+            t_emb = t_emb.half()
         emb = self.time_embed(t_emb)
 
         # guided_hint from text_info
@@ -344,6 +348,7 @@ class ControlNet(nn.Module):
 class ControlLDM(LatentDiffusion):
 
     def __init__(self, control_stage_config, control_key, glyph_key, position_key, only_mid_control, loss_alpha=0, loss_beta=0, with_step_weight=False, use_vae_upsample=False, latin_weight=1.0, embedding_manager_config=None, *args, **kwargs):
+        self.use_fp16 = kwargs.pop('use_fp16', False)
         super().__init__(*args, **kwargs)
         self.control_model = instantiate_from_config(control_stage_config)
         self.control_key = control_key
@@ -356,6 +361,7 @@ class ControlLDM(LatentDiffusion):
         self.with_step_weight = with_step_weight
         self.use_vae_upsample = use_vae_upsample
         self.latin_weight = latin_weight
+
         if embedding_manager_config is not None and embedding_manager_config.params.valid:
             self.embedding_manager = self.instantiate_embedding_manager(embedding_manager_config, self.cond_stage_model)
             for param in self.embedding_manager.embedding_parameters():
@@ -369,6 +375,7 @@ class ControlLDM(LatentDiffusion):
                 args.rec_image_shape = "3, 48, 320"
                 args.rec_batch_num = 6
                 args.rec_char_dict_path = './ocr_recog/ppocr_keys_v1.txt'
+                args.use_fp16 = self.use_fp16
                 self.cn_recognizer = TextRecognizer(args, self.text_predictor)
                 for param in self.text_predictor.parameters():
                     param.requires_grad = False
@@ -433,6 +440,8 @@ class ControlLDM(LatentDiffusion):
         diffusion_model = self.model.diffusion_model
         _cond = torch.cat(cond['c_crossattn'], 1)
         _hint = torch.cat(cond['c_concat'], 1)
+        if self.use_fp16:
+            x_noisy = x_noisy.half()
         control = self.control_model(x=x_noisy, timesteps=t, context=_cond, hint=_hint, text_info=cond['text_info'])
         control = [c * scale for c, scale in zip(control, self.control_scales)]
         eps = diffusion_model(x=x_noisy, timesteps=t, context=_cond, control=control, only_mid_control=self.only_mid_control)

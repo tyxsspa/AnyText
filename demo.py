@@ -13,12 +13,41 @@ import re
 from gradio.components import Component
 from util import check_channels, resize_image, save_images
 import json
+import argparse
+
 
 BBOX_MAX_NUM = 8
 img_save_folder = 'SaveImages'
 load_model = True
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--use_fp32",
+        action="store_true",
+        default=False,
+        help="Whether or not to use fp32 during inference."
+    )
+    parser.add_argument(
+        "--no_translator",
+        action="store_true",
+        default=False,
+        help="Whether or not to use the CH->EN translator, which enable input Chinese prompt and cause ~4GB VRAM."
+    )
+    parser.add_argument(
+        "--font_path",
+        type=str,
+        default='font/Arial_Unicode.ttf',
+        help="path of a font file"
+    )
+    args = parser.parse_args()
+    return args
+
+
+args = parse_args()
 if load_model:
-    inference = pipeline('my-anytext-task', model='damo/cv_anytext_text_generation_editing', model_revision='v1.1.0')
+    inference = pipeline('my-anytext-task', model='damo/cv_anytext_text_generation_editing', model_revision='v1.1.1', use_fp16=not args.use_fp32, use_translator=not args.no_translator, font_path=args.font_path)
 
 
 def count_lines(prompt):
@@ -221,7 +250,8 @@ with block:
             [<a href="https://arxiv.org/abs/2311.03054" style="color:blue; font-size:18px;">arXiv</a>] \
             [<a href="https://github.com/tyxsspa/AnyText" style="color:blue; font-size:18px;">Code</a>] \
             [<a href="https://modelscope.cn/models/damo/cv_anytext_text_generation_editing/summary" style="color:blue; font-size:18px;">ModelScope</a>]\
-            version: 1.1.0 </div>')
+            [<a href="https://huggingface.co/spaces/modelscope/AnyText" style="color:blue; font-size:18px;">HuggingFace</a>]\
+            version: 1.1.1 </div>')
     with gr.Row(variant='compact'):
         with gr.Column():
             with gr.Accordion('🕹Instructions(说明)', open=False,):
@@ -305,7 +335,7 @@ with block:
                             rect_xywh_list.extend([x, y, w, h])
 
                     rect_img = gr.Image(value=create_canvas(), label="Rext Position(方框位置)", elem_id="MD-bbox-rect-t2i", show_label=False, visible=False)
-                    draw_img = gr.Image(value=create_canvas(), label="Draw Position(绘制位置)", visible=True, tool='sketch', show_label=False, brush_radius=60)
+                    draw_img = gr.Image(value=create_canvas(), label="Draw Position(绘制位置)", visible=True, tool='sketch', show_label=False, brush_radius=100)
 
                     def re_draw():
                         return [gr.Image(value=create_canvas(), tool='sketch'), gr.Slider(value=512), gr.Slider(value=512)]
@@ -357,7 +387,7 @@ with block:
                         ori_img = gr.Image(label='Ori(原图)')
 
                     def upload_ref(x):
-                        return [gr.Image(type="numpy", brush_radius=60, tool='sketch'),
+                        return [gr.Image(type="numpy", brush_radius=100, tool='sketch'),
                                 gr.Image(value=x)]
 
                     def clear_ref(x):

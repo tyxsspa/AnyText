@@ -5,6 +5,7 @@
 ![sample](docs/sample.jpg "sample")
 
 ## 📌News
+[2024.01.04] - FP16 inference is available, 3x faster! Now the demo can be deployed on GPU with >8GB memory. Enjoy!  
 [2024.01.04] - HuggingFace Online demo is available [here](https://huggingface.co/spaces/modelscope/AnyText)!  
 [2023.12.28] - ModelScope Online demo is available [here](https://modelscope.cn/studios/damo/studio_anytext/summary)!  
 [2023.12.27] - 🧨We released the latest checkpoint(v1.1) and inference code, check on [modelscope](https://modelscope.cn/models/damo/cv_anytext_text_generation_editing/summary) in Chinese.  
@@ -47,9 +48,18 @@ AnyText include two modes: Text Generation and Text Editing. Running the simple 
 ```bash
 python inference.py
 ```
-If you have advanced GPU (with at least 20G memory), it is recommended to deploy our demo as below, which includes usage instruction, user interface and abundant examples.
+If you have advanced GPU (with at least 8G memory), it is recommended to deploy our demo as below, which includes usage instruction, user interface and abundant examples.
 ```bash
-python demo.py
+export CUDA_VISIBLE_DEVICES=0 && python demo.py
+```
+FP16 inference is used as default, and a Chinese-to-English translation model is loaded for direct input of Chinese prompt (occupying ~4GB of GPU memory). The default behavior can be modified, as the following command enables FP32 inference and disables the translation model:
+```bash
+export CUDA_VISIBLE_DEVICES=0 && python demo.py --use_fp32 --no_translator
+```
+If FP16 is used and the translation model not used(or load it on CPU, [see here](https://github.com/tyxsspa/AnyText/issues/33)), generation of one single 512x512 image will occupy ~7.5GB of GPU memory.
+In addition, other font file can be used by(although the result may not be optimal):
+```bash
+export CUDA_VISIBLE_DEVICES=0 && python demo.py --font_path your/path/to/font/file.ttf
 ```
 ![demo](docs/demo.jpg "demo")
 **Please note** that when executing inference for the first time, the model files will be downloaded to: `~/.cache/modelscope/hub`. If you need to modify the download directory, you can manually specify the environment variable: `MODELSCOPE_CACHE`.

@@ -146,3 +146,4 @@ dmypy.json
 /tmp_files/
 /SaveImages/
 ./*.png
+font/*.ttf
