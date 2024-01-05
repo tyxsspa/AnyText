@@ -1,6 +1,6 @@
 from modelscope.pipelines import pipeline
 from util import save_images
-pipe = pipeline('my-anytext-task', model='damo/cv_anytext_text_generation_editing', model_revision='v1.1.0')
+pipe = pipeline('my-anytext-task', model='damo/cv_anytext_text_generation_editing', model_revision='v1.1.1')
 img_save_folder = "SaveImages"
 params = {
     "show_debug": True,
@@ -18,6 +18,9 @@ input_data = {
 results, rtn_code, rtn_warning, debug_info = pipe(input_data, mode=mode, **params)
 if rtn_code >= 0:
     save_images(results, img_save_folder)
+    print(f'Done, result images are saved in: {img_save_folder}')
+if rtn_warning:
+    print(rtn_warning)
 # 2. text editing
 mode = 'text-editing'
 input_data = {
@@ -29,4 +32,6 @@ input_data = {
 results, rtn_code, rtn_warning, debug_info = pipe(input_data, mode=mode, **params)
 if rtn_code >= 0:
     save_images(results, img_save_folder)
-print(f'Done, result images are saved in: {img_save_folder}')
+    print(f'Done, result images are saved in: {img_save_folder}')
+if rtn_warning:
+    print(rtn_warning)

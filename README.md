@@ -56,7 +56,7 @@ FP16 inference is used as default, and a Chinese-to-English translation model is
 ```bash
 export CUDA_VISIBLE_DEVICES=0 && python demo.py --use_fp32 --no_translator
 ```
-If FP16 is used and the translation model not used(or load it on CPU, [see here](https://github.com/tyxsspa/AnyText/issues/33)), generation of one single 512x512 image will occupy ~7.5GB of GPU memory.
+If FP16 is used and the translation model not used(or load it on CPU, [see here](https://github.com/tyxsspa/AnyText/issues/33)), generation of one single 512x512 image will occupy ~7.5GB of GPU memory.  
 In addition, other font file can be used by(although the result may not be optimal):
 ```bash
 export CUDA_VISIBLE_DEVICES=0 && python demo.py --font_path your/path/to/font/file.ttf
