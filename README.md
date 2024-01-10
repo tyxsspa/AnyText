@@ -11,6 +11,7 @@
 [2023.12.27] - 🧨We released the latest checkpoint(v1.1) and inference code, check on [modelscope](https://modelscope.cn/models/damo/cv_anytext_text_generation_editing/summary) in Chinese.  
 [2023.12.05] - The paper is available at [here](https://arxiv.org/abs/2311.03054).  
 
+For more AIGC related works of our group, please visit [here](https://github.com/AIGCDesignGroup).
 
 ## ⏰TODOs
 - [x] Release the model and inference code
