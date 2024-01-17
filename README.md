@@ -5,6 +5,7 @@
 ![sample](docs/sample.jpg "sample")
 
 ## 📌News
+[2024.01.17] - 🎉AnyText has been accepted by ICLR 2024(**Spotlight**)!  
 [2024.01.04] - FP16 inference is available, 3x faster! Now the demo can be deployed on GPU with >8GB memory. Enjoy!  
 [2024.01.04] - HuggingFace Online demo is available [here](https://huggingface.co/spaces/modelscope/AnyText)!  
 [2023.12.28] - ModelScope Online demo is available [here](https://modelscope.cn/studios/damo/studio_anytext/summary)!  
