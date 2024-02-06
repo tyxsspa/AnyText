@@ -5,6 +5,7 @@
 ![sample](docs/sample.jpg "sample")
 
 ## 📌News
+[2024.02.06] - Happy Lunar New Year Everyone! We've launched a fun app on ModelScope to create cute meme stickers([表情包大师](https://modelscope.cn/studios/iic/MemeMaster/summary)). Come and have fun with it!   
 [2024.01.17] - 🎉AnyText has been accepted by ICLR 2024(**Spotlight**)!  
 [2024.01.04] - FP16 inference is available, 3x faster! Now the demo can be deployed on GPU with >8GB memory. Enjoy!  
 [2024.01.04] - HuggingFace Online demo is available [here](https://huggingface.co/spaces/modelscope/AnyText)!  
