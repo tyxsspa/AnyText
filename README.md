@@ -5,12 +5,12 @@
 ![sample](docs/sample.jpg "sample")
 
 ## 📌News
-[2024.02.06] - Happy Lunar New Year Everyone! We've launched a fun app on ModelScope to create cute meme stickers([表情包大师](https://modelscope.cn/studios/iic/MemeMaster/summary)). Come and have fun with it!   
+[2024.02.06] - Happy Lunar New Year Everyone! We've launched a fun app(表情包大师/MeMeMaster) on [ModelScope](https://modelscope.cn/studios/iic/MemeMaster/summary) and [HuggingFace](https://huggingface.co/spaces/martinxm/MemeMaster) to create cute meme stickers. Come and have fun with it!   
 [2024.01.17] - 🎉AnyText has been accepted by ICLR 2024(**Spotlight**)!  
 [2024.01.04] - FP16 inference is available, 3x faster! Now the demo can be deployed on GPU with >8GB memory. Enjoy!  
 [2024.01.04] - HuggingFace Online demo is available [here](https://huggingface.co/spaces/modelscope/AnyText)!  
 [2023.12.28] - ModelScope Online demo is available [here](https://modelscope.cn/studios/damo/studio_anytext/summary)!  
-[2023.12.27] - 🧨We released the latest checkpoint(v1.1) and inference code, check on [modelscope](https://modelscope.cn/models/damo/cv_anytext_text_generation_editing/summary) in Chinese.  
+[2023.12.27] - 🧨We released the latest checkpoint(v1.1) and inference code, check on [ModelScope](https://modelscope.cn/models/damo/cv_anytext_text_generation_editing/summary) in Chinese.  
 [2023.12.05] - The paper is available at [here](https://arxiv.org/abs/2311.03054).  
 
 For more AIGC related works of our group, please visit [here](https://github.com/AIGCDesignGroup), and we are seeking collaborators and research interns([Email us](mailto:cangyu.gyf@alibaba-inc.com)).
