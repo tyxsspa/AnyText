@@ -46,7 +46,7 @@ conda activate anytext
 ```
 
 ## 🔮Inference
-**[Recommend]**： We release a demo on [ModelScope](https://modelscope.cn/studios/damo/studio_anytext/summary) and [HuggingFace](https://huggingface.co/spaces/modelscope/AnyText)!
+**[Recommend]**： We release a demo on [ModelScope](https://modelscope.cn/studios/damo/studio_anytext/summary) and [HuggingFace](https://huggingface.co/spaces/modelscope/AnyText)! You can also try AnyText through our [API](https://help.aliyun.com/zh/dashscope/developer-reference/tongyi-wanxiang-api-for-anytext?spm=a2c4g.11186623.0.0.31f5e0f6B8s4rF) service.
 
 AnyText include two modes: Text Generation and Text Editing. Running the simple code below to perform inference in both modes and verify whether the environment is correctly installed.
 ```bash
