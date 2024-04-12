@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 import random
 import math
+import time
 from PIL import Image, ImageDraw, ImageFont
 from torch.utils.data import Dataset, DataLoader
 from dataset_util import load, show_bbox_on_image
@@ -220,6 +221,7 @@ class T3DataSet(Dataset):
             self.tmp_items = [i for i in range(100)]
 
     def load_data(self, json_path, percent):
+        tic = time.time()
         content = load(json_path)
         d = []
         count = 0
@@ -264,7 +266,7 @@ class T3DataSet(Dataset):
                 info['language'] = languages
                 info['pos'] = pos
             d.append(info)
-        print(f'{json_path} loaded, imgs={len(d)}, wm_skip={wm_skip}')
+        print(f'{json_path} loaded, imgs={len(d)}, wm_skip={wm_skip}, time={(time.time()-tic):.2f}s')
         if count > 0:
             print(f"Found {count} image's caption contain placeholder: {self.place_holder}, change to ' '...")
         return d

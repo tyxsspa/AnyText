@@ -22,7 +22,7 @@ dependencies:
       - test-tube==0.7.5
       - streamlit==1.20.0
       - einops==0.4.1
-      - transformers==4.34.1
+      - transformers==4.30.2
       - webdataset==0.2.5
       - kornia==0.6.7
       - open_clip_torch==2.7.0
@@ -41,3 +41,5 @@ dependencies:
       - sacremoses==0.0.53
       - sentencepiece==0.1.99
       - fsspec
+      - diffusers==0.10.2
+      - ujson

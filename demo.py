@@ -41,13 +41,28 @@ def parse_args():
         default='font/Arial_Unicode.ttf',
         help="path of a font file"
     )
+    parser.add_argument(
+        "--model_path",
+        type=str,
+        default=None,
+        help="load a specified anytext checkpoint"
+    )
     args = parser.parse_args()
     return args
 
 
 args = parse_args()
+infer_params = {
+    "model": 'damo/cv_anytext_text_generation_editing',
+    "model_revision": 'v1.1.3',
+    "use_fp16": not args.use_fp32,
+    "use_translator": not args.no_translator,
+    "font_path": args.font_path,
+}
+if args.model_path:
+    infer_params['model_path'] = args.model_path
 if load_model:
-    inference = pipeline('my-anytext-task', model='damo/cv_anytext_text_generation_editing', model_revision='v1.1.2', use_fp16=not args.use_fp32, use_translator=not args.no_translator, font_path=args.font_path)
+    inference = pipeline('my-anytext-task', **infer_params)
 
 
 def count_lines(prompt):
@@ -132,7 +147,7 @@ def draw_rects(width, height, rects):
     return img
 
 
-def process(mode, prompt, pos_radio, sort_radio, revise_pos, show_debug, draw_img, rect_img, ref_img, ori_img, img_count, ddim_steps, w, h, strength, cfg_scale, seed, eta, a_prompt, n_prompt, *rect_list):
+def process(mode, prompt, pos_radio, sort_radio, revise_pos, base_model_path, lora_path_ratio, show_debug, draw_img, rect_img, ref_img, ori_img, img_count, ddim_steps, w, h, strength, cfg_scale, seed, eta, a_prompt, n_prompt, *rect_list):
     n_lines = count_lines(prompt)
     # Text Generation
     if mode == 'gen':
@@ -176,6 +191,7 @@ def process(mode, prompt, pos_radio, sort_radio, revise_pos, show_debug, draw_im
             pos_imgs = 255 - ref_img  # example input ref_img is used as pos
     cv2.imwrite('pos_imgs.png', 255-pos_imgs[..., ::-1])
     params = {
+        "mode": mode,
         "sort_priority": sort_radio,
         "show_debug": show_debug,
         "revise_pos": revise_pos,
@@ -187,7 +203,9 @@ def process(mode, prompt, pos_radio, sort_radio, revise_pos, show_debug, draw_im
         "cfg_scale": cfg_scale,
         "eta": eta,
         "a_prompt": a_prompt,
-        "n_prompt": n_prompt
+        "n_prompt": n_prompt,
+        "base_model_path": base_model_path,
+        "lora_path_ratio": lora_path_ratio
     }
     input_data = {
         "prompt": prompt,
@@ -195,7 +213,8 @@ def process(mode, prompt, pos_radio, sort_radio, revise_pos, show_debug, draw_im
         "draw_pos": pos_imgs,
         "ori_image": ori_img,
     }
-    results, rtn_code, rtn_warning, debug_info = inference(input_data, mode=mode, **params)
+
+    results, rtn_code, rtn_warning, debug_info = inference(input_data, **params)
     if rtn_code >= 0:
         save_images(results, img_save_folder)
         print(f'Done, result images are saved in: {img_save_folder}')
@@ -251,7 +270,7 @@ with block:
             [<a href="https://github.com/tyxsspa/AnyText" style="color:blue; font-size:18px;">Code</a>] \
             [<a href="https://modelscope.cn/models/damo/cv_anytext_text_generation_editing/summary" style="color:blue; font-size:18px;">ModelScope</a>]\
             [<a href="https://huggingface.co/spaces/modelscope/AnyText" style="color:blue; font-size:18px;">HuggingFace</a>]\
-            version: 1.1.2 </div>')
+            version: 1.1.3 </div>')
     with gr.Row(variant='compact'):
         with gr.Column() as left_part:
             pass
@@ -313,6 +332,8 @@ with block:
                     gr.Markdown('<span style="color:silver;font-size:12px">whether show glyph image and debug information in the result(是否在结果中显示glyph图以及调试信息)</span>')
                 a_prompt = gr.Textbox(label="Added Prompt(附加提示词)", value='best quality, extremely detailed,4k, HD, supper legible text,  clear text edges,  clear strokes, neat writing, no watermarks')
                 n_prompt = gr.Textbox(label="Negative Prompt(负向提示词)", value='low-res, bad anatomy, extra digit, fewer digits, cropped, worst quality, low quality, watermark, unreadable text, messy words, distorted text, disorganized writing, advertising picture')
+            base_model_path = gr.Textbox(label='Base Model Path(基模地址)')
+            lora_path_ratio = gr.Textbox(label='LoRA Path and Ratio(lora地址和比例)')
             prompt = gr.Textbox(label="Prompt(提示词)")
             with gr.Tabs() as tab_modes:
                 with gr.Tab("🖼Text Generation(文字生成)", elem_id='MD-tab-t2i') as mode_gen:
@@ -449,7 +470,7 @@ with block:
                             examples_per_page=5,
                             label=''
                         )
-    ips = [prompt, pos_radio, sort_radio, revise_pos, show_debug, draw_img, rect_img, ref_img, ori_img, img_count, ddim_steps, image_width, image_height, strength, cfg_scale, seed, eta, a_prompt, n_prompt, *(rect_cb_list+rect_xywh_list)]
+    ips = [prompt, pos_radio, sort_radio, revise_pos, base_model_path, lora_path_ratio, show_debug, draw_img, rect_img, ref_img, ori_img, img_count, ddim_steps, image_width, image_height, strength, cfg_scale, seed, eta, a_prompt, n_prompt, *(rect_cb_list+rect_xywh_list)]
     run_gen.click(fn=process, inputs=[gr.State('gen')] + ips, outputs=[result_gallery, result_info])
     run_edit.click(fn=process, inputs=[gr.State('edit')] + ips, outputs=[result_gallery, result_info])
 
