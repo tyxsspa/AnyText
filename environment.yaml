@@ -5,9 +5,7 @@ channels:
 dependencies:
   - python=3.10.6
   - pip=23.0.1
-  - pytorch=2.1.0
-  - torchvision=0.16.0
-  - cudatoolkit=11.8
+  - cudatoolkit=11.7
   - numpy=1.23.3
   - cython==0.29.33
   - pip:
@@ -35,6 +33,8 @@ dependencies:
       - jieba==0.42.1
       - modelscope==1.10.0
       - tensorflow==2.13.0
+      - torch==2.0.1
+      - torchvision==0.15.2
       - easydict==1.10
       - xformers==0.0.20
       - subword-nmt==0.3.8

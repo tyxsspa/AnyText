@@ -1,10 +1,12 @@
 # AnyText: Multilingual Visual Text Generation And Editing
 
-<a href='https://arxiv.org/abs/2311.03054'><img src='https://img.shields.io/badge/Paper-Arxiv-red'></a> <a href='https://github.com/tyxsspa/AnyText'><img src='https://img.shields.io/badge/Code-Github-green'></a> <a href='https://modelscope.cn/studios/damo/studio_anytext'><img src='https://img.shields.io/badge/Demo-ModelScope-lightblue'></a> <a href='https://huggingface.co/spaces/modelscope/AnyText'><img src='https://img.shields.io/badge/Demo-HuggingFace-yellow'></a>
+<a href='https://arxiv.org/abs/2311.03054'><img src='https://img.shields.io/badge/Paper-Arxiv-red'></a> <a href='https://github.com/tyxsspa/AnyText'><img src='https://img.shields.io/badge/Code-Github-green'></a> <a href='https://modelscope.cn/studios/damo/studio_anytext'><img src='https://img.shields.io/badge/Demo-ModelScope-lightblue'></a> <a href='https://huggingface.co/spaces/modelscope/AnyText'><img src='https://img.shields.io/badge/Demo-HuggingFace-yellow'></a> <a href='https://help.aliyun.com/zh/dashscope/developer-reference/tongyi-wanxiang-api-for-anytext'><img src='https://img.shields.io/badge/API-DashScope-orange'></a>
 
 ![sample](docs/sample.jpg "sample")
 
 ## 📌News
+[2024.04.18] - 👏👏👏The training code and dataset([**AnyWord-3M**](https://modelscope.cn/datasets/iic/AnyWord-3M/summary)) are released!  
+[2024.04.18] - You can merge weights from self-trained or community models into AnyText now, including all base models and LoRA models based on SD1.5. Have fun!  
 [2024.02.21] - The evaluation code and dataset(**AnyText-benchmark**) are released.  
 [2024.02.06] - Happy Lunar New Year Everyone! We've launched a fun app(表情包大师/MeMeMaster) on [ModelScope](https://modelscope.cn/studios/iic/MemeMaster/summary) and [HuggingFace](https://huggingface.co/spaces/martinxm/MemeMaster) to create cute meme stickers. Come and have fun with it!   
 [2024.01.17] - 🎉AnyText has been accepted by ICLR 2024(**Spotlight**)!  
@@ -20,10 +22,10 @@ For more AIGC related works of our group, please visit [here](https://github.com
 - [x] Release the model and inference code
 - [x] Provide publicly accessible demo link
 - [ ] Provide a free font file(🤔)
-- [ ] Release tools for merging weights from community models or LoRAs
+- [x] Release tools for merging weights from community models or LoRAs
 - [ ] Support AnyText in stable-diffusion-webui(🤔)
 - [x] Release AnyText-benchmark dataset and evaluation code
-- [ ] Release AnyWord-3M dataset and training code
+- [x] Release AnyWord-3M dataset and training code
  
 
 ## 💡Methodology
@@ -65,8 +67,16 @@ In addition, other font file can be used by(although the result may not be optim
 ```bash
 export CUDA_VISIBLE_DEVICES=0 && python demo.py --font_path your/path/to/font/file.ttf
 ```
+You can also load a specified AnyText checkpoint:
+```bash
+export CUDA_VISIBLE_DEVICES=0 && python demo.py --model_path your/path/to/your/own/anytext.ckpt
+```
 ![demo](docs/demo.jpg "demo")
 **Please note** that when executing inference for the first time, the model files will be downloaded to: `~/.cache/modelscope/hub`. If you need to modify the download directory, you can manually specify the environment variable: `MODELSCOPE_CACHE`.
+
+In this demo, you can change the style during inference by either change the base model or loading LoRA models(must based on SD1.5):  
+- Change base model: Simply fill in your local base model's path in the [Base Model Path].  
+- Load LoRA models: Input your LoRA model's path and weight ratio into the [LoRA Path and Ratio]. For example: `/path/of/lora1.pth 0.3 /path/of/lora2.safetensors 0.6`.
 
 ## 📈Evaluation
 ### 1. Data Preparation
@@ -102,9 +112,18 @@ We use the FID metric to assess the quality of generated images. Please run:
 bash eval/eval_fid.sh
 ```
 
-Compared to existing methods, AnyText has a significant advantage in both English and Chinese text generation.
+Compared to existing methods, AnyText has a significant advantage in both English and Chinese text generation.  
 ![eval](docs/eval.jpg "eval")
 Please note that we have reorganized the code and have further aligned the configuration for each method under evaluation. As a result, there may be minor numerical differences compared to those reported in the original paper.
+
+## 🚂Training
+1. It is highly recommended to create and activate the `anytext` virtual environment from previous instructions, where the versions of libraries are verified. Otherwise, if you encounter an environmental dependency or training issue, please check if it matches with the versions as listed in `environment.yaml`.  
+2. Download training dataset [**AnyWord-3M**](https://modelscope.cn/datasets/iic/AnyWord-3M/summary) from ModelScope, unzip all \*.zip files in each subfolder, then open *\*.json* and modify the `data_root` with your own path of *imgs* folder for each sub dataset.  
+3. Download SD1.5 checkpoint from [HuggingFace](https://huggingface.co/runwayml/stable-diffusion-v1-5/tree/main), then run `python tool_add_anytext.py` to get an anytext pretrained model.  
+4. Run `python train.py`.  
+**Note**: Training AnyText on 8xA100 (80GB) takes ~312 hours, you can also quickly reproduce it with 200k images, which takes ~60 hours on 8xV100(32GB). Enable Perceptual Loss will consume a significant amount of VRAM and reduce the training speed. Additionally, filtering out images containing watermarks will lower the likelihood of generating watermarks. These two steps are usually activated in the last 1 or 2 epochs. Relevant parameters can be found in the `Configs` within train.py, please check carefully.  
+The metrics we achieved using 200k images for reproduce are as follows. Note that these metrics are significantly higher than those reported in the original paper because we used V1.1 data and code. For more details, see Appendix 7 of the original paper.  
+![reproduce](docs/reproduce.jpg "reproduce")
 
 ## 🌄Gallery
 ![gallery](docs/gallery.png "gallery")

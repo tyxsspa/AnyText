@@ -375,11 +375,41 @@ class FrozenCLIPEmbedderT3(AbstractEncoder):
             param.requires_grad = False
 
     def forward(self, text, **kwargs):
-        batch_encoding = self.tokenizer(text, truncation=True, max_length=self.max_length, return_length=True,
-                                        return_overflowing_tokens=False, padding="max_length", return_tensors="pt")
-        tokens = batch_encoding["input_ids"].to(self.device)
-        z = self.transformer(input_ids=tokens, **kwargs)
-        return z
+        batch_encoding = self.tokenizer(text, truncation=False, max_length=self.max_length, return_length=True,
+                                        return_overflowing_tokens=False, padding="longest", return_tensors="pt")
+        input_ids = batch_encoding["input_ids"]
+        tokens_list = self.split_chunks(input_ids)
+        z_list = []
+        for tokens in tokens_list:
+            tokens = tokens.to(self.device)
+            _z = self.transformer(input_ids=tokens, **kwargs)
+            z_list += [_z]
+        return torch.cat(z_list, dim=1)
 
     def encode(self, text, **kwargs):
         return self(text, **kwargs)
+
+    def split_chunks(self, input_ids, chunk_size=75):
+        tokens_list = []
+        bs, n = input_ids.shape
+        id_start = input_ids[:, 0].unsqueeze(1)  # dim --> [bs, 1]
+        id_end = input_ids[:, -1].unsqueeze(1)
+        if n == 2:  # empty caption
+            tokens_list.append(torch.cat((id_start, )+(id_end, )*(chunk_size+1), dim=1))
+
+        trimmed_encoding = input_ids[:, 1:-1]
+        num_full_groups = (n - 2) // chunk_size
+
+        for i in range(num_full_groups):
+            group = trimmed_encoding[:, i * chunk_size:(i + 1) * chunk_size]
+            group_pad = torch.cat((id_start, group, id_end), dim=1)
+            tokens_list.append(group_pad)
+
+        remaining_columns = (n - 2) % chunk_size
+        if remaining_columns > 0:
+            remaining_group = trimmed_encoding[:, -remaining_columns:]
+            padding_columns = chunk_size - remaining_group.shape[1]
+            padding = id_end.expand(bs, padding_columns)
+            remaining_group_pad = torch.cat((id_start, remaining_group, padding, id_end), dim=1)
+            tokens_list.append(remaining_group_pad)
+        return tokens_list

@@ -18,7 +18,8 @@ from ldm.modules.attention import SpatialTransformer
 from ldm.modules.diffusionmodules.openaimodel import UNetModel, TimestepEmbedSequential, ResBlock, Downsample, AttentionBlock
 from ldm.models.diffusion.ddpm import LatentDiffusion
 from ldm.util import log_txt_as_img, exists, instantiate_from_config
-from ldm.models.diffusion.ddim import DDIMSampler
+# from ldm.models.diffusion.ddim import DDIMSampler
+from cldm.ddim_hacked import DDIMSampler
 from ldm.modules.distributions.distributions import DiagonalGaussianDistribution
 from .recognizer import TextRecognizer, create_predictor
 

@@ -160,7 +160,7 @@ class TextRecognizer(object):
         return padding_im
 
     # img_list: list of tensors with shape chw 0-255
-    def pred_imglist(self, img_list, show_debug=False, is_ori=False):
+    def pred_imglist(self, img_list, show_debug=False):
         img_num = len(img_list)
         assert img_num > 0
         # Calculate the aspect ratio of all text bars
@@ -200,7 +200,8 @@ class TextRecognizer(object):
                     _img = (_img + 0.5)*255
                     _img = _img[:, :, ::-1]
                     file_name = f'{indices[beg_img_no + i]}'
-                    file_name = file_name + '_ori' if is_ori else file_name
+                    if os.path.exists(file_name + '.jpg'):
+                        file_name += '_2'  # ori image
                     cv2.imwrite(file_name + '.jpg', _img)
             if self.is_onnx:
                 input_dict = {}

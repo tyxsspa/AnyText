@@ -921,6 +921,170 @@ class LatentDiffusion(DDPM):
         kl_prior = normal_kl(mean1=qt_mean, logvar1=qt_log_variance, mean2=0.0, logvar2=0.0)
         return mean_flat(kl_prior) / np.log(2.0)
 
+    def p_losses(self, x_start, cond, t, noise=None):
+        noise = default(noise, lambda: torch.randn_like(x_start))
+        x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
+        model_output = self.apply_model(x_noisy, t, cond)
+
+        loss_dict = {}
+        prefix = 't' if self.training else 'v'
+
+        if self.parameterization == "x0":
+            target = x_start
+        elif self.parameterization == "eps":
+            target = noise
+        elif self.parameterization == "v":
+            target = self.get_v(x_start, noise, t)
+        else:
+            raise NotImplementedError()
+
+        loss_eps = self.get_loss(model_output, target, mean=False)
+        if True:  # block grad in invalid mask areas
+            inv_mask = cond['text_info']['inv_mask']
+            inv_mask = torch.nn.functional.interpolate(inv_mask, size=(64, 64)).repeat(1, 4, 1, 1)
+            loss_eps = loss_eps * (1 - inv_mask)
+        loss_simple = loss_eps.mean([1, 2, 3])
+        loss_dict.update({f'{prefix}/sim': loss_simple.mean()})
+
+        loss_ocr = torch.zeros_like(loss_simple)
+        loss_ctc = torch.zeros_like(loss_simple)
+
+        if self.loss_alpha > 0 or self.loss_beta > 0:
+            self.text_predictor.eval()
+            step_weight = extract_into_tensor(self.alphas_cumprod, t, x_start.shape).reshape(len(t))
+            if not self.with_step_weight:
+                step_weight = torch.ones_like(step_weight)
+            pred_x0 = self.predict_start_from_noise(x_noisy, t, model_output)
+            if self.use_vae_upsample:
+                decode_x0 = self.decode_first_stage_grad(pred_x0)
+            else:
+                decode_x0 = torch.nn.functional.interpolate(
+                    pred_x0,
+                    size=(512, 512),
+                    mode='bilinear',
+                    align_corners=True,
+                )
+                decode_x0 = decode_x0.mean(dim=1, keepdim=True).repeat(1, 3, 1, 1)
+            decode_x0 = torch.clamp(decode_x0, -1, 1)
+            decode_x0 = (decode_x0 + 1.0) / 2.0 * 255  # -1,1 -> 0,255; n, c,h,w
+
+            origin_x0 = (cond['text_info']['img'] + 1.0) / 2.0 * 255  # -1,1 -> 0,255; n,h,w,c
+            origin_x0 = rearrange(origin_x0, 'n h w c -> n c h w')
+            if PRINT_DEBUG:
+                cv2.imwrite('00.origin.jpg', origin_x0[0].permute(1, 2, 0).detach().cpu().numpy()[..., ::-1])
+                cv2.imwrite('00.decode.jpg', decode_x0[0].permute(1, 2, 0).detach().cpu().numpy()[..., ::-1])
+                decode_x0.register_hook(print_grad)
+                model_output.register_hook(print_grad)
+
+            bsz = decode_x0.shape[0]
+            bs_ocr_loss = []
+            bs_ctc_loss = []
+            recog = self.cn_recognizer
+
+            lang_weight = []
+            gt_texts = []
+            x0_texts = []
+            x0_texts_ori = []
+
+            for i in range(bsz):
+                n_lines = cond['text_info']['n_lines'][i]  # batch size
+                for j in range(n_lines):  # line
+                    lang = cond['text_info']['language'][j][i]
+                    if lang == 'Chinese':
+                        lang_weight += [1.0]
+                    elif lang == 'Latin':
+                        lang_weight += [self.latin_weight]
+                    else:
+                        lang_weight += [1.0]  # unsupport language, TODO
+                    gt_texts += [cond['text_info']['texts'][j][i]]
+                    pos = cond['text_info']['positions'][j][i]*255.
+                    pos = rearrange(pos, 'c h w -> h w c')
+                    np_pos = pos.detach().cpu().numpy().astype(np.uint8)
+                    x0_text = crop_image(decode_x0[i], np_pos)
+                    x0_texts += [x0_text]
+                    x0_text_ori = crop_image(origin_x0[i], np_pos)
+                    x0_texts_ori += [x0_text_ori]
+            if len(x0_texts) > 0:
+                x0_list = x0_texts + x0_texts_ori
+                preds, preds_neck = recog.pred_imglist(x0_list, show_debug=PRINT_DEBUG)
+                n_pairs = len(preds)//2
+                preds_decode = preds[:n_pairs]
+                preds_ori = preds[n_pairs:]
+                preds_neck_decode = preds_neck[:n_pairs]
+                preds_neck_ori = preds_neck[n_pairs:]
+                lang_weight = torch.tensor(lang_weight).to(preds_neck.device)
+                # split to batches
+                bs_preds_decode = []
+                bs_preds_ori = []
+                bs_preds_neck_decode = []
+                bs_preds_neck_ori = []
+                bs_lang_weight = []
+                bs_gt_texts = []
+                n_idx = 0
+                for i in range(bsz):  # sample index in a batch
+                    n_lines = cond['text_info']['n_lines'][i]
+                    bs_preds_decode += [preds_decode[n_idx:n_idx+n_lines]]
+                    bs_preds_ori += [preds_ori[n_idx:n_idx+n_lines]]
+                    bs_preds_neck_decode += [preds_neck_decode[n_idx:n_idx+n_lines]]
+                    bs_preds_neck_ori += [preds_neck_ori[n_idx:n_idx+n_lines]]
+                    bs_lang_weight += [lang_weight[n_idx:n_idx+n_lines]]
+                    bs_gt_texts += [gt_texts[n_idx:n_idx+n_lines]]
+                    n_idx += n_lines
+                # calc loss
+                ocr_loss_debug = []
+                ctc_loss_debug = []
+                for i in range(bsz):
+                    if len(bs_preds_neck_decode[i]) > 0:
+                        if self.loss_alpha > 0:
+                            sp_ocr_loss = self.get_loss(bs_preds_neck_decode[i], bs_preds_neck_ori[i], mean=False).mean([1, 2])
+                            sp_ocr_loss *= bs_lang_weight[i]  # weighted by language
+                            bs_ocr_loss += [sp_ocr_loss.mean()]
+                            ocr_loss_debug += sp_ocr_loss.detach().cpu().numpy().tolist()
+                        else:
+                            bs_ocr_loss += [torch.tensor(0).float().to(pred_x0.device)]
+                        if self.loss_beta > 0:
+                            sp_ctc_loss = recog.get_ctcloss(bs_preds_decode[i], bs_gt_texts[i], bs_lang_weight[i])
+                            bs_ctc_loss += [sp_ctc_loss.mean()]
+                            ctc_loss_debug += sp_ctc_loss.detach().cpu().numpy().tolist()
+                        else:
+                            bs_ctc_loss += [torch.tensor(0).float().to(pred_x0.device)]
+                    else:
+                        bs_ocr_loss += [torch.tensor(0).float().to(pred_x0.device)]
+                        bs_ctc_loss += [torch.tensor(0).float().to(pred_x0.device)]
+
+                if PRINT_DEBUG and len(preds_decode) > 0:
+                    with torch.no_grad():
+                        preds_all = preds_decode.softmax(dim=2)
+                        preds_all_ori = preds_ori.softmax(dim=2)
+                        for k in range(len(preds_all)):
+                            pred = preds_all[k]
+                            order, idx = recog.decode(pred)
+                            text = recog.get_text(order)
+                            pred_ori = preds_all_ori[k]
+                            order, idx = recog.decode(pred_ori)
+                            text_ori = recog.get_text(order)
+                            str_log = f't = {t}, pred/ori/gt="{text}"/"{text_ori}"/"{gt_texts[k]}"'
+                            if self.loss_alpha > 0:
+                                str_log += f' ocr_loss={ocr_loss_debug[k]:.4f}'
+                            if self.loss_beta > 0:
+                                str_log += f' ctc_loss={ctc_loss_debug[k]:.4f}'
+                            print(str_log)
+
+                loss_ocr += torch.stack(bs_ocr_loss) * self.loss_alpha * step_weight
+                loss_ctc += torch.stack(bs_ctc_loss) * self.loss_beta * step_weight
+                if PRINT_DEBUG:
+                    print(f'loss_ocr: {loss_ocr.mean().detach().cpu().numpy():.4f}, loss_ctc: {loss_ctc.mean().detach().cpu().numpy():.4f}, loss_simple: {loss_simple.mean().detach().cpu().numpy():.4f}, Weight: loss_alpha={self.loss_alpha}, loss_beta={self.loss_beta}, step_weight={step_weight.detach().cpu().numpy()}, latin_weight={self.latin_weight}')
+            loss_dict.update({f'{prefix}/ocr': loss_ocr.mean()})
+            loss_dict.update({f'{prefix}/ctc': loss_ctc.mean()})
+            loss_simple += loss_ocr
+            loss_simple += loss_ctc
+
+        loss = loss_simple.mean()
+
+        loss_dict.update({f'{prefix}/loss': loss})
+
+        return loss, loss_dict
+
     def p_mean_variance(self, x, c, t, clip_denoised: bool, return_codebook_ids=False, quantize_denoised=False,
                         return_x0=False, score_corrector=None, corrector_kwargs=None):
         t_in = t

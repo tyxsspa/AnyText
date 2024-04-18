@@ -1,3 +1,4 @@
+import ujson
 import json
 import pathlib
 
@@ -18,9 +19,9 @@ def load_txt(file_path: str):
 
 
 def load_json(file_path: str):
-    with open(file_path, 'r', encoding='utf8') as f:
-        content = json.load(f)
-    return content
+    with open(file_path, 'rb') as f:
+        content = f.read()
+    return ujson.loads(content)
 
 
 def save(data, file_path):
