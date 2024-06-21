@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from functools import partial
-from ldm.modules.diffusionmodules.util import conv_nd, linear
+from ldm.modules.diffusionmodules.util import conv_nd, linear, zero_module
 
 
 def get_clip_token_for_string(tokenizer, string):
@@ -102,7 +102,10 @@ class EmbeddingManager(nn.Module):
         if add_pos:
             self.position_encoder = EncodeNet(position_channels, token_dim)
         if emb_type == 'ocr':
-            self.proj = linear(40*64, token_dim)
+            self.proj = nn.Sequential(
+                            zero_module(linear(40*64, token_dim)),
+                            nn.LayerNorm(token_dim)
+                            )
         if emb_type == 'conv':
             self.glyph_encoder = EncodeNet(glyph_channels, token_dim)
 
