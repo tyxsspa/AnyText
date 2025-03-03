@@ -5,6 +5,7 @@
 ![sample](docs/sample.jpg "sample")
 
 ## 📌News
+[2024.03.03] - 🔥🔥🔥We have open-sourced AnyText2, which is faster, performs better, and allows you to set properties such as font and color for the text! See [[demo]](https://modelscope.cn/studios/iic/studio_anytext2) [[code]](https://github.com/tyxsspa/AnyText2) [[ckpt]](https://modelscope.cn/models/iic/cv_anytext2)!  
 [2024.04.18] - 👏👏👏The training code and dataset([**AnyWord-3M**](https://modelscope.cn/datasets/iic/AnyWord-3M/summary)) are released!  
 [2024.04.18] - You can merge weights from self-trained or community models into AnyText now, including all base models and LoRA models based on SD1.5. Have fun!  
 [2024.02.21] - The evaluation code and dataset(**AnyText-benchmark**) are released.  
